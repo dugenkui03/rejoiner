@@ -40,14 +40,20 @@ public final class TypeTest {
 
   @Test
   public void addFieldShouldAddField() throws Exception {
+
+    // fixme 定义一个动作
     TypeModification typeModification =
+        // 根据graphql的引用名称、获取其类型对象：ModifiableType 可修改的类型
         Type.find("project")
+            // 添加字段定义，返回类型 TypeModification
             .addField(
                 GraphQLFieldDefinition.newFieldDefinition()
                     .name("isTheBest")
                     .type(Scalars.GraphQLBoolean)
-                    .build());
+                    .build()
+            );
 
+    // fixme 在某个对象类型上执行定义的动作
     assertThat(typeModification.apply(OBJECT_TYPE).getFieldDefinition("isTheBest")).isNotNull();
   }
 

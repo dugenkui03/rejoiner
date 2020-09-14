@@ -22,7 +22,12 @@ import graphql.AssertException;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 
-/** Modifies a GraphQL schema by adding, removing, and replacing fields on a type. */
+
+/**
+ * Modifies a GraphQL schema by adding, removing, and replacing fields on a type.
+ *
+ * 通过添加、移除和替换字段定义，来修改GraphQL schema
+ */
 public final class Type {
 
   private Type() {}
@@ -61,6 +66,7 @@ public final class Type {
       return new RemoveFieldsByName(typeName, ImmutableList.copyOf(fieldNames));
     }
 
+    // 返回移除了指定字段的类型
     /** Returns a TypeModification that will remove the specified fields. */
     public TypeModification removeField(String fieldName) {
       return new RemoveFieldByName(typeName, fieldName);
