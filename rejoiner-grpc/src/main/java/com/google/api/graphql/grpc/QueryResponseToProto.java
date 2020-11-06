@@ -23,47 +23,66 @@ import com.google.protobuf.Message.Builder;
 import java.util.List;
 import java.util.Map;
 
-/** Fills proto with query response data. */
+/**
+ * Fills proto with query response data.
+ *
+ * 使用查询响应字段填充proto消息、proto消息可能有值。
+ *
+ * fixme 将map数据填充到 proto 对象中，但是解析一般是逆向的。
+ */
 public final class QueryResponseToProto {
+
+  // 驼峰 -> 下划线
+  private static final Converter<String, String> CAMEL_TO_UNDERSCORE = CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
 
   private QueryResponseToProto() {}
 
   public static <T extends Message> T buildMessage(T message, Map<String, Object> fields) {
-    @SuppressWarnings("unchecked")
-    T populatedMessage = (T) buildMessage(message.toBuilder(), fields);
-    return populatedMessage;
+    return (T) buildMessage(message.toBuilder(), fields);
   }
 
-  @SuppressWarnings("unchecked")
-  private static Object buildMessage(Builder builder, Map<String, Object> fields) {
+  private static Object buildMessage(Builder msgBuilder, Map<String, Object> fields) {
+    /**
+     * 如果字段集合为null、则返回不改变的对象
+     */
     if (fields == null) {
-      return builder.build();
+      return msgBuilder.build();
     }
-    Descriptor descriptor = builder.getDescriptorForType();
+
+    // todo 返回消息的类型描述。
+    Descriptor descriptor = msgBuilder.getDescriptorForType();
+
+    // 遍历字段信息
     for (Map.Entry<String, Object> entry : fields.entrySet()) {
+
+      // 如果value为空则忽略
       if (entry.getValue() == null) {
         continue;
       }
-      FieldDescriptor field = getField(descriptor, entry.getKey());
+
+      // 获取字段描述信息
+      FieldDescriptor fieldDescriptor = getFieldDescriptor(descriptor, entry.getKey());
+
+      // 如果value是list
       if (entry.getValue() instanceof List<?>) {
         List<Object> values = (List<Object>) entry.getValue();
+        // 遍历value的每一个元素，并将其
         for (Object value : values) {
-          builder.addRepeatedField(field, buildValue(builder, field, value));
+          // set list元素
+          msgBuilder.addRepeatedField(fieldDescriptor, buildValue(msgBuilder, fieldDescriptor, value));
         }
-
       } else {
-        builder.setField(field, buildValue(builder, field, entry.getValue()));
+        msgBuilder.setField(fieldDescriptor, buildValue(msgBuilder, fieldDescriptor, entry.getValue()));
       }
     }
-    return builder.build();
+    return msgBuilder.build();
   }
 
-  @SuppressWarnings("unchecked")
-  private static Object buildValue(
-      Message.Builder parentBuilder, FieldDescriptor field, Object value) {
+  private static Object buildValue(Message.Builder parentBuilder, FieldDescriptor field, Object value) {
     if (field == null) {
       return value;
     }
+
     if (field.getType() == FieldDescriptor.Type.MESSAGE) {
       if (field.isRepeated()) {}
       Message.Builder fieldBuilder = parentBuilder.newBuilderForField(field);
@@ -80,10 +99,14 @@ public final class QueryResponseToProto {
     }
   }
 
-  private static FieldDescriptor getField(Descriptor descriptor, String name) {
-    return descriptor.findFieldByName(CAMEL_TO_UNDERSCORE.convert(name));
-  }
+  /**
+   * todo 非常非常有用啊！！！
+   */
+  private static FieldDescriptor getFieldDescriptor(Descriptor descriptor, String name) {
+    // 驼峰转下划线、获取字段在proto中的定义名称
+    String fieldNameInProto = CAMEL_TO_UNDERSCORE.convert(name);
 
-  private static final Converter<String, String> CAMEL_TO_UNDERSCORE =
-      CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
+    // 获取字段描述信息
+    return descriptor.findFieldByName(fieldNameInProto);
+  }
 }

@@ -26,18 +26,31 @@ import graphql.GraphQLError;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-/** Transforms ExecutionResult into generated proto Messages. */
+/**
+ * Transforms ExecutionResult into generated proto Messages.
+ *
+ * 将一个 执行结果 转换为 proto消息，牛逼。
+ */
 public final class ExecutionResultToProtoAsync {
 
-  /** Transforms an async ExecutionResult into a ProtoExecutionResult. */
-  public static <T extends Message>
-      CompletableFuture<ProtoExecutionResult<T>> toProtoExecutionResult(
-          T message, CompletableFuture<ExecutionResult> executionResultCompletableFuture) {
-    return executionResultCompletableFuture.thenApply(
-        executionResult ->
-            ProtoExecutionResult.create(
-                QueryResponseToProto.buildMessage(message, executionResult.getData()),
-                errorsToProto(executionResult.getErrors())));
+  /**
+   * Transforms an async ExecutionResult into a ProtoExecutionResult.
+   * 将一个异步的 执行结果 转换为 ProtoExecutionResult
+   *
+   * @param message
+   * @param graphqlExeFuture graphql的执行结果。
+   * @param <T>
+   * @return
+   */
+  public static <T extends Message> CompletableFuture<ProtoExecutionResult<T>> toProtoExecutionResult(
+          T message,
+          CompletableFuture<ExecutionResult> graphqlExeFuture) {
+    return graphqlExeFuture.thenApply(result -> {
+      // 包装
+      T msg = QueryResponseToProto.buildMessage(message, result.getData());
+      List<GraphqlError> graphqlErrors = errorsToProto(result.getErrors());
+      return ProtoExecutionResult.create(data, error);
+    });
   }
   /**
    * Transforms an async ExecutionResult into a proto Messages.

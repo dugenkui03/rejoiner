@@ -14,18 +14,19 @@
 
 package com.google.api.graphql.grpc;
 
-import com.google.protobuf.ByteString;
+import com.google.protobuf.*;
 import com.google.protobuf.DescriptorProtos.FileDescriptorSet;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.DescriptorValidationException;
 import com.google.protobuf.Descriptors.FileDescriptor;
-import com.google.protobuf.DynamicMessage;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.Message;
 import graphql.ExecutionResult;
 import java.util.Map;
 
-/** Utility to encode and decode data dynamically using a Proto Descriptor. */
+/**
+ * Utility to encode and decode data dynamically using a Proto Descriptor.
+ *
+ * 使用 Descriptor 动态的编码、解码 数据。
+ */
 public final class DynamicProtoUtil {
 
   private DynamicProtoUtil() {}
@@ -36,16 +37,23 @@ public final class DynamicProtoUtil {
    * <p>The FileDescriptorSet must contain a message with the name "{operationName}Response". This
    * message will be populated with data from the execution result and encoded as a ByteString.
    */
-  public static ByteString encodeResponse(
-      String operationName, FileDescriptorSet fileDescriptorSet, ExecutionResult executionResult) {
+  public static ByteString encodeResponse(String operationName,
+                                          FileDescriptorSet fileDescriptorSet,
+                                          ExecutionResult executionResult) {
     try {
       // TODO: Support multiple FileDescriptors in FileDescriptorSet
-      FileDescriptor fileDescriptor =
-          FileDescriptor.buildFrom(fileDescriptorSet.getFileList().get(0), new FileDescriptor[] {});
+      DescriptorProtos.FileDescriptorProto fileDescProto = fileDescriptorSet.getFileList().get(0);
 
+      // FileDescriptor： proto 文件的所有信息
+      FileDescriptor fileDescriptor = FileDescriptor.buildFrom(fileDescProto, new FileDescriptor[]{});
+
+      // Descriptor： 描述一个 message信息
       Descriptor messageType = fileDescriptor.findMessageTypeByName(operationName + "Response");
 
+      // 将数据解析为指定类型的消息。
       Message message = DynamicMessage.parseFrom(messageType, ByteString.EMPTY);
+
+      // 
       Message responseData = QueryResponseToProto.buildMessage(message, executionResult.getData());
 
       return responseData.toByteString();

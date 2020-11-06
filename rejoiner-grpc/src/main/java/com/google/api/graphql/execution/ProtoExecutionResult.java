@@ -20,19 +20,30 @@ import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.Immutable;
 import com.google.protobuf.Message;
 
-/** GraphQL execution result represented using a generated proto for the message. */
+/**
+ * GraphQL execution result represented using a generated proto for the message.
+ *
+ * 使用 proto消息 代表graphql执行结果。
+ */
 @AutoValue
 @Immutable
 public abstract class ProtoExecutionResult<T extends Message> {
 
-  static <T extends Message> ProtoExecutionResult<T> create(
-      T message, ImmutableList<GraphqlError> errors) {
-    return new AutoValue_ProtoExecutionResult(message, errors);
+  static <T extends Message> ProtoExecutionResult<T> create(T dataMessage, ImmutableList<GraphqlError> errors) {
+    return new AutoValue_ProtoExecutionResult(dataMessage, errors);
   }
 
-  /** Returns the message */
+  /**
+   * Returns the message
+   *
+   * 结果数据。
+   */
   public abstract T message();
 
-  /** Returns errors or an empty list. */
+  /**
+   * Returns errors or an empty list.
+   *
+   * 执行错误信息。
+   */
   public abstract ImmutableList<GraphqlError> errors();
 }
